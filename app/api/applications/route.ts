@@ -5,6 +5,7 @@ import { FieldValue } from "firebase-admin/firestore"
 import type { ApplicationDoc, ApplicationPayload } from "@/lib/application"
 import { ACCOUNT_TYPES, ELEMENTS } from "@/lib/application"
 import { GUILDS } from "@/lib/guilds"
+import { getClientIp, rateLimit } from "@/lib/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -42,6 +43,17 @@ function isStoredImage(v: unknown): v is { url: string; path: string } {
 }
 
 export async function POST(request: Request) {
+  // Throttle public submissions: 5 per 10 minutes per IP.
+  const ip = getClientIp(request)
+  const limit = rateLimit(`applications:${ip}`, 5, 10 * 60 * 1000)
+  if (!limit.success) {
+    const retryAfter = Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 1000))
+    return NextResponse.json(
+      { error: "Too many applications submitted. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } },
+    )
+  }
+
   const payload = (await request.json().catch(() => null)) as ApplicationPayload | null
 
   if (!payload) {

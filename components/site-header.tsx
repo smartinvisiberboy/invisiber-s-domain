@@ -28,6 +28,7 @@ export function SiteHeader() {
             alt="Invisiber's Domain emblem"
             width={34}
             height={34}
+            priority
             className="h-8 w-8 object-contain drop-shadow-[0_0_10px_rgba(120,170,255,0.6)]"
           />
           <span className="font-serif text-sm font-semibold tracking-[0.18em] text-foreground sm:text-base">
