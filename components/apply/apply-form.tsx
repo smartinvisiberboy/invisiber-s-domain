@@ -37,6 +37,42 @@ import {
 } from '@/components/ui/select'
 import { ImageSlot, type ImageValue } from '@/components/apply/image-slot'
 import { ElementImageGroup } from '@/components/apply/element-image-group'
+import { ReferenceExamples } from '@/components/apply/reference-example'
+
+/** Embedded reference screenshots that show applicants what to upload. */
+const REF_PROFILE = { src: '/reference/profile.png', alt: 'Example profile screenshot' }
+const REF_GUILD_BOSS = {
+  src: '/reference/guild-boss.png',
+  alt: 'Example Guild Boss screenshot showing total score',
+}
+const REF_BATTLE_TIER = {
+  src: '/reference/battle-tier.png',
+  alt: 'Example Battle Tier screenshot',
+}
+const REF_SUCCESSOR = [
+  { src: '/reference/successor-1.png', alt: 'Example Successor screenshot 1' },
+  { src: '/reference/successor-2.png', alt: 'Example Successor screenshot 2' },
+]
+const REF_HUNTERS: Record<ElementId, { src: string; alt: string }[]> = {
+  fire: [
+    { src: '/reference/hunter-fire-1.png', alt: 'Fire hunter example 1' },
+    { src: '/reference/hunter-fire-2.png', alt: 'Fire hunter example 2' },
+  ],
+  water: [{ src: '/reference/hunter-water-1.png', alt: 'Water hunter example' }],
+  wind: [{ src: '/reference/hunter-wind-1.png', alt: 'Wind hunter example' }],
+  light: [{ src: '/reference/hunter-light-1.png', alt: 'Light hunter example' }],
+  dark: [
+    { src: '/reference/hunter-dark-1.png', alt: 'Dark hunter example 1' },
+    { src: '/reference/hunter-dark-2.png', alt: 'Dark hunter example 2' },
+  ],
+}
+const REF_WEAPONS: Record<ElementId, { src: string; alt: string }[]> = {
+  fire: [{ src: '/reference/weapon-fire-1.png', alt: 'Fire weapon example' }],
+  water: [{ src: '/reference/weapon-water-1.png', alt: 'Water weapon example' }],
+  wind: [{ src: '/reference/weapon-wind-1.png', alt: 'Wind weapon example' }],
+  light: [{ src: '/reference/weapon-light-1.png', alt: 'Light weapon example' }],
+  dark: [{ src: '/reference/weapon-dark-1.png', alt: 'Dark weapon example' }],
+}
 
 function emptyGroup(): Record<ElementId, ImageValue[]> {
   return ELEMENTS.reduce(
@@ -212,6 +248,12 @@ export function ApplyForm() {
               <div className="w-32">
                 <ImageSlot value={profileImage} onChange={setProfileImage} />
               </div>
+              <ReferenceExamples
+                images={[REF_PROFILE]}
+                label="Profile example"
+                aspect="wide"
+                className="mt-3"
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -221,7 +263,7 @@ export function ApplyForm() {
                   id="discordId"
                   value={discordId}
                   onChange={(e) => setDiscordId(e.target.value)}
-                  placeholder="e.g. username or 123456789012345678"
+                  placeholder="e.g. smartabc123"
                 />
               </div>
 
@@ -250,7 +292,7 @@ export function ApplyForm() {
                   min={0}
                   value={score}
                   onChange={(e) => setScore(e.target.value)}
-                  placeholder="e.g. 2500"
+                  placeholder="e.g. 250"
                 />
               </div>
 
@@ -283,18 +325,30 @@ export function ApplyForm() {
           description="Screenshots to verify your progress."
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <ImageSlot
-              value={guildBossShot}
-              onChange={setGuildBossShot}
-              label="Guild Boss Screenshot"
-              aspect="video"
-            />
-            <ImageSlot
-              value={battleTierShot}
-              onChange={setBattleTierShot}
-              label="Battle Tier Screenshot"
-              aspect="video"
-            />
+            <div className="flex flex-col gap-3">
+              <ReferenceExamples
+                images={[REF_GUILD_BOSS]}
+                label="Guild Boss example"
+              />
+              <ImageSlot
+                value={guildBossShot}
+                onChange={setGuildBossShot}
+                label="Guild Boss Screenshot"
+                aspect="video"
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              <ReferenceExamples
+                images={[REF_BATTLE_TIER]}
+                label="Battle Tier example"
+              />
+              <ImageSlot
+                value={battleTierShot}
+                onChange={setBattleTierShot}
+                label="Battle Tier Screenshot"
+                aspect="video"
+              />
+            </div>
           </div>
         </Section>
 
@@ -304,7 +358,11 @@ export function ApplyForm() {
           icon={Users}
           description="Upload 2 images for each element."
         >
-          <ElementImageGroup value={hunters} onChange={updateElement(setHunters)} />
+          <ElementImageGroup
+            value={hunters}
+            onChange={updateElement(setHunters)}
+            references={REF_HUNTERS}
+          />
         </Section>
 
         <Section
@@ -313,7 +371,11 @@ export function ApplyForm() {
           icon={Swords}
           description="Upload 2 images for each element."
         >
-          <ElementImageGroup value={weapons} onChange={updateElement(setWeapons)} />
+          <ElementImageGroup
+            value={weapons}
+            onChange={updateElement(setWeapons)}
+            references={REF_WEAPONS}
+          />
         </Section>
 
         <Section
@@ -322,6 +384,11 @@ export function ApplyForm() {
           icon={ShieldQuestion}
           description="Optional — up to 2 images."
         >
+          <ReferenceExamples
+            images={REF_SUCCESSOR}
+            label="Successor examples"
+            className="mb-4 sm:max-w-sm"
+          />
           <div className="grid grid-cols-2 gap-4 sm:max-w-sm">
             {[0, 1].map((i) => (
               <ImageSlot

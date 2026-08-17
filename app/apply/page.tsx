@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { ApplyForm } from "@/components/apply/apply-form"
@@ -15,7 +16,15 @@ export default function ApplyPage() {
     <>
       <SiteHeader />
       <main className="relative z-10 mx-auto min-h-screen w-full max-w-4xl px-4 pb-24 pt-28 sm:px-6">
-        <header className="mb-10 text-center">
+        <header className="mb-10 flex flex-col items-center text-center">
+          <Image
+            src="/reference/logo.png"
+            alt="Invisiber's Domain logo"
+            width={168}
+            height={168}
+            priority
+            className="mb-6 h-28 w-28 object-contain drop-shadow-[0_0_35px_rgba(120,170,255,0.45)] sm:h-32 sm:w-32"
+          />
           <p className="font-mono text-xs uppercase tracking-[0.35em] text-primary/80">Applicant Portal</p>
           <h1 className="mt-3 text-balance font-sans text-4xl font-bold tracking-tight sm:text-5xl">
             Prove Your Worth

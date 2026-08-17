@@ -2,6 +2,7 @@
 
 import { ELEMENTS, type ElementId } from '@/lib/application'
 import { ImageSlot, type ImageValue } from '@/components/apply/image-slot'
+import { ReferenceExamples } from '@/components/apply/reference-example'
 
 const ELEMENT_ACCENT: Record<ElementId, string> = {
   fire: 'text-orange-400',
@@ -14,9 +15,11 @@ const ELEMENT_ACCENT: Record<ElementId, string> = {
 export function ElementImageGroup({
   value,
   onChange,
+  references,
 }: {
   value: Record<ElementId, ImageValue[]>
   onChange: (element: ElementId, index: number, v: ImageValue) => void
+  references?: Record<ElementId, { src: string; alt: string }[]>
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -33,6 +36,13 @@ export function ElementImageGroup({
               {el.label}
             </h4>
           </div>
+          {references?.[el.id]?.length ? (
+            <ReferenceExamples
+              images={references[el.id]}
+              label={`${el.label} example`}
+              className="mb-3"
+            />
+          ) : null}
           <div className="grid grid-cols-2 gap-3">
             {[0, 1].map((i) => (
               <ImageSlot

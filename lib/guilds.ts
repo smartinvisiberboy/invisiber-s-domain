@@ -57,7 +57,7 @@ export const GUILDS: Guild[] = [
     id: 'icefrog',
     name: 'IceFrog',
     tier: 'S-3',
-    level: 'Lv.19',
+    level: 'Lv.20',
     minScore: 2400,
     rc: 'RC 120+',
     contribution: '2400+',
