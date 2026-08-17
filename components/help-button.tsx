@@ -3,22 +3,20 @@
 import { ExternalLink, LifeBuoy } from 'lucide-react'
 import { HELP_DISCORD_USER_ID } from '@/lib/guilds'
 
-const DISCORD_DEEP_LINK = `discord://-/users/${HELP_DISCORD_USER_ID}`
-const DISCORD_WEB_FALLBACK = `https://discord.com/users/${HELP_DISCORD_USER_ID}`
+const DISCORD_WEB_URL = `https://discord.com/users/${HELP_DISCORD_USER_ID}`
 
 export function HelpButton() {
   const openDiscord = () => {
-    // Try to open the native Discord app first, then fall back to the web.
-    const fallback = window.setTimeout(() => {
-      window.open(DISCORD_WEB_FALLBACK, '_blank', 'noopener,noreferrer')
-    }, 600)
+    // Open the Discord profile in a new tab. The web page itself will offer to
+    // launch the native Discord app if it's installed. Opening in a new tab
+    // works reliably everywhere, including inside the v0 preview iframe.
+    const win = window.open(DISCORD_WEB_URL, '_blank', 'noopener,noreferrer')
 
-    // If the app opens, the page loses focus and we cancel the web fallback.
-    const cancel = () => window.clearTimeout(fallback)
-    window.addEventListener('blur', cancel, { once: true })
-    window.addEventListener('pagehide', cancel, { once: true })
-
-    window.location.href = DISCORD_DEEP_LINK
+    // If the popup was blocked, fall back to navigating the top-level window.
+    if (!win) {
+      const target = window.top ?? window
+      target.location.href = DISCORD_WEB_URL
+    }
   }
 
   return (
