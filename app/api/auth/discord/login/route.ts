@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server"
 import { randomBytes } from "crypto"
 import { DISCORD_OAUTH_SCOPES, OAUTH_STATE_COOKIE } from "@/lib/auth/config"
+import { getRedirectUri } from "@/lib/auth/discord-callback"
 
 export const dynamic = "force-dynamic"
-
-function getRedirectUri(origin: string): string {
-  return process.env.DISCORD_REDIRECT_URI || `${origin}/api/auth/discord/callback`
-}
 
 export async function GET(request: Request) {
   const origin = new URL(request.url).origin

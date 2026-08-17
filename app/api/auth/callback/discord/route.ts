@@ -2,9 +2,8 @@ import { handleDiscordCallback } from "@/lib/auth/discord-callback"
 
 export const dynamic = "force-dynamic"
 
-// Legacy callback path. Kept working alongside the canonical
-// `/api/auth/callback/discord` route so OAuth succeeds regardless of which
-// path DISCORD_REDIRECT_URI is configured with.
+// Canonical Discord OAuth callback path:
+// https://<domain>/api/auth/callback/discord
 export async function GET(request: Request) {
   return handleDiscordCallback(request)
 }
