@@ -6,6 +6,7 @@ import type { ApplicationDoc, ApplicationPayload } from "@/lib/application"
 import { ACCOUNT_TYPES, ELEMENTS } from "@/lib/application"
 import { GUILDS } from "@/lib/guilds"
 import { getClientIp, rateLimit } from "@/lib/rate-limit"
+import { notifyNewApplication } from "@/lib/email/application-notify"
 
 export const dynamic = "force-dynamic"
 
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
 
   try {
     const db = getAdminDb()
+    const successor = Array.isArray(payload.successor) ? payload.successor.filter(isStoredImage) : []
     const ref = await db.collection(APPLICATIONS_COLLECTION).add({
       discordId: payload.discordId.trim(),
       guildId: payload.guildId,
@@ -104,11 +106,29 @@ export async function POST(request: Request) {
       battleTierScreenshot: payload.battleTierScreenshot,
       hunters: payload.hunters,
       weapons: payload.weapons,
-      successor: Array.isArray(payload.successor) ? payload.successor.filter(isStoredImage) : [],
+      successor,
       status: "pending",
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     })
+
+    // Notify the manager inbox. Best-effort: never block the applicant's response.
+    const countImages = (group: Record<string, unknown[]>) =>
+      ELEMENTS.reduce((sum, el) => sum + (Array.isArray(group?.[el.id]) ? group[el.id].filter(isStoredImage).length : 0), 0)
+    await notifyNewApplication(
+      {
+        applicationId: ref.id,
+        discordId: payload.discordId.trim(),
+        guildName: guild.name,
+        guildBossScore: score,
+        accountType: payload.accountType,
+        hunterCount: countImages(payload.hunters as Record<string, unknown[]>),
+        weaponCount: countImages(payload.weapons as Record<string, unknown[]>),
+        successorCount: successor.length,
+      },
+      new URL(request.url).origin,
+    )
+
     return NextResponse.json({ id: ref.id })
   } catch (error) {
     console.error("[v0] Failed to save application:", error)

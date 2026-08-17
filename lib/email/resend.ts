@@ -19,6 +19,11 @@ export function getApprovalRecipient(): string {
   return process.env.ACCESS_REQUEST_NOTIFY_EMAIL || DEFAULT_APPROVAL_RECIPIENT
 }
 
+/** Recipient for "new application submitted" notifications. */
+export function getApplicationNotifyRecipient(): string {
+  return process.env.APPLICATION_NOTIFY_EMAIL || DEFAULT_APPROVAL_RECIPIENT
+}
+
 export function isResendConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL)
 }
