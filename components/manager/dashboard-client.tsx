@@ -6,14 +6,14 @@ import { useState } from "react"
 import { LogOut, Inbox, AlertCircle } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { ApplicationCard } from "./application-card"
-import type { ApplicationRecord, ApplicationStatus } from "@/lib/application"
+import type { ApplicationDoc, ApplicationStatus } from "@/lib/application"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 type ManagerInfo = { username: string; role: string; avatar?: string | null }
 
 export function DashboardClient({ manager }: { manager: ManagerInfo }) {
-  const { data, error, isLoading, mutate } = useSWR<{ applications: ApplicationRecord[]; error?: string }>(
+  const { data, error, isLoading, mutate } = useSWR<{ applications: ApplicationDoc[]; error?: string }>(
     "/api/applications",
     fetcher,
     { refreshInterval: 15000 },
@@ -29,6 +29,7 @@ export function DashboardClient({ manager }: { manager: ManagerInfo }) {
 
   async function updateStatus(id: string, status: "accepted" | "rejected") {
     // Optimistic update
+    const empty = { applications: [] as ApplicationDoc[] }
     await mutate(
       async (current) => {
         await fetch(`/api/applications/${id}`, {
@@ -36,18 +37,18 @@ export function DashboardClient({ manager }: { manager: ManagerInfo }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status }),
         })
-        return current
+        return current ?? empty
       },
       {
-        optimisticData: (current) =>
-          current
-            ? {
-                ...current,
-                applications: current.applications.map((a) =>
-                  a.id === id ? { ...a, status, reviewedBy: manager.username } : a,
-                ),
-              }
-            : current,
+        optimisticData: (current) => {
+          const base = current ?? empty
+          return {
+            ...base,
+            applications: base.applications.map((a) =>
+              a.id === id ? { ...a, status, reviewedBy: manager.username } : a,
+            ),
+          }
+        },
         rollbackOnError: true,
         revalidate: true,
       },

@@ -269,7 +269,7 @@ export function ApplyForm() {
 
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="guild">Guild Selection</Label>
-                <Select value={guildId} onValueChange={setGuildId}>
+                <Select value={guildId} onValueChange={(v) => setGuildId(v ?? '')}>
                   <SelectTrigger id="guild" className="w-full">
                     <SelectValue placeholder="Choose a guild" />
                   </SelectTrigger>

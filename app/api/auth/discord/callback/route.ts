@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { isAuthorizedManager, managerRole, OAUTH_STATE_COOKIE, SESSION_COOKIE } from "@/lib/auth/config"
 import { createSessionToken, SESSION_MAX_AGE } from "@/lib/auth/session"
+import { recordAccessRequest } from "@/lib/access-requests"
 
 export const dynamic = "force-dynamic"
 
@@ -69,6 +70,14 @@ export async function GET(request: Request) {
   }
 
   if (!isAuthorizedManager(user.id)) {
+    // Log the attempt as a pending access request and email the owner for approval.
+    await recordAccessRequest({
+      discordId: user.id,
+      username: user.global_name || user.username,
+      avatar: user.avatar
+        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+        : null,
+    })
     return NextResponse.redirect(`${origin}/manager?error=unauthorized`)
   }
 

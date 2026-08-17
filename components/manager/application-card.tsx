@@ -5,8 +5,15 @@ import Image from "next/image"
 import { Check, X, ChevronDown, Loader2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ELEMENTS, type ApplicationRecord } from "@/lib/application"
+import { ELEMENTS, type ApplicationDoc, type StoredImage } from "@/lib/application"
 import { cn } from "@/lib/utils"
+
+/** Maps a StoredImage array (or single) to plain download URLs. */
+function toUrls(images: StoredImage[] | StoredImage | undefined | null): string[] {
+  if (!images) return []
+  const arr = Array.isArray(images) ? images : [images]
+  return arr.map((img) => img?.url).filter(Boolean) as string[]
+}
 
 function ImageGrid({ label, urls }: { label: string; urls: string[] }) {
   if (!urls || urls.length === 0) return null
@@ -41,7 +48,7 @@ export function ApplicationCard({
   application,
   onUpdate,
 }: {
-  application: ApplicationRecord
+  application: ApplicationDoc
   onUpdate: (id: string, status: "accepted" | "rejected") => Promise<void>
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -68,9 +75,9 @@ export function ApplicationCard({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-border/60 bg-secondary">
-            {application.profileImage ? (
+            {application.profileImage?.url ? (
               <Image
-                src={application.profileImage || "/placeholder.svg"}
+                src={application.profileImage.url || "/placeholder.svg"}
                 alt={`${application.discordId} profile`}
                 fill
                 sizes="56px"
@@ -106,15 +113,15 @@ export function ApplicationCard({
       {expanded ? (
         <div className="mt-4 space-y-5 border-t border-border/60 pt-4">
           <div className="grid gap-5 sm:grid-cols-2">
-            <ImageGrid label="Guild Boss Screenshot" urls={[application.guildBossScreenshot].filter(Boolean) as string[]} />
-            <ImageGrid label="Battle Tier Screenshot" urls={[application.battleTierScreenshot].filter(Boolean) as string[]} />
+            <ImageGrid label="Guild Boss Screenshot" urls={toUrls(application.guildBossScreenshot)} />
+            <ImageGrid label="Battle Tier Screenshot" urls={toUrls(application.battleTierScreenshot)} />
           </div>
 
           <div>
             <p className="mb-3 font-sans text-sm font-semibold text-foreground">Hunters</p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {ELEMENTS.map((el) => (
-                <ImageGrid key={`hunter-${el}`} label={el} urls={application.hunters?.[el] ?? []} />
+                <ImageGrid key={`hunter-${el.id}`} label={el.label} urls={toUrls(application.hunters?.[el.id])} />
               ))}
             </div>
           </div>
@@ -123,12 +130,12 @@ export function ApplicationCard({
             <p className="mb-3 font-sans text-sm font-semibold text-foreground">Weapons</p>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {ELEMENTS.map((el) => (
-                <ImageGrid key={`weapon-${el}`} label={el} urls={application.weapons?.[el] ?? []} />
+                <ImageGrid key={`weapon-${el.id}`} label={el.label} urls={toUrls(application.weapons?.[el.id])} />
               ))}
             </div>
           </div>
 
-          <ImageGrid label="Successor" urls={application.successor ?? []} />
+          <ImageGrid label="Successor" urls={toUrls(application.successor)} />
         </div>
       ) : null}
 
