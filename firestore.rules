@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// Invisiber's Domain — Firestore security rules.
+//
+// Trust model:
+// - The website talks to Firestore ONLY through the Firebase Admin SDK on the
+//   server (see lib/firebase/admin.ts). The Admin SDK bypasses these rules
+//   entirely, so all privileged reads/writes (managers reviewing applications,
+//   security logs, audit logs, blocklist, access requests) happen server-side
+//   behind Discord OAuth + a signed session cookie.
+// - These rules therefore govern the *public client SDK* only. They exist to
+//   deny everything the browser must never touch, while still letting an
+//   applicant submit their own application.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Applications are CREATED by applicants exclusively through the validated,
+    // rate-limited server route (POST /api/applications) using the Admin SDK,
+    // which bypasses these rules. Applicants can therefore only create — never
+    // read, list, edit, or delete applications (their own or anyone else's).
+    // Direct client access is denied so validation can't be bypassed.
+    match /applications/{applicationId} {
+      allow read, create, update, delete: if false;
+    }
+
+    // Security-sensitive collections are entirely off-limits to the client.
+    // All access is server-side via the Admin SDK after Discord authorization.
+    match /access_requests/{docId}    { allow read, write: if false; }
+    match /authorized_managers/{docId} { allow read, write: if false; }
+    match /blocked_users/{docId}       { allow read, write: if false; }
+    match /security_logs/{docId}       { allow read, write: if false; }
+    match /audit_logs/{docId}          { allow read, write: if false; }
+
+    // Default deny for anything not explicitly matched above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

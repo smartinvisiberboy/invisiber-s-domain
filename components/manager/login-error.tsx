@@ -1,6 +1,7 @@
 const MESSAGES: Record<string, string> = {
   unauthorized:
     "That Discord account is not authorized yet. Your access request has been submitted for approval — you'll be notified once reviewed.",
+  blocked: "Access Blocked. This account has been permanently denied access to the Manager Portal.",
   not_configured: "Discord OAuth is not configured yet. Add the Discord environment variables.",
   state_mismatch: "Login session expired or was tampered with. Please try again.",
   token_exchange: "Could not verify your Discord login. Please try again.",

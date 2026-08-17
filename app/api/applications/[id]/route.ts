@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getManagerSession } from "@/lib/auth/session"
 import { APPLICATIONS_COLLECTION, getAdminDb } from "@/lib/firebase/admin"
 import { FieldValue } from "firebase-admin/firestore"
+import { logAudit } from "@/lib/security/store"
 
 export const dynamic = "force-dynamic"
 
@@ -31,6 +32,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         reviewedBy: session.username,
         reviewedAt: FieldValue.serverTimestamp(),
       })
+
+    // Record the manager decision in the audit trail (accepted/rejected only).
+    if (status === "accepted" || status === "rejected") {
+      await logAudit({
+        actor: { discordId: session.discordId, username: session.username },
+        action: status === "accepted" ? "Accept" : "Reject",
+        targetId: id,
+      })
+    }
+
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error("[v0] Failed to update application:", error)

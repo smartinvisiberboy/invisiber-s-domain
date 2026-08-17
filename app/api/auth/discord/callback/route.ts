@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { isAuthorizedManager, managerRole, OAUTH_STATE_COOKIE, SESSION_COOKIE } from "@/lib/auth/config"
 import { createSessionToken, SESSION_MAX_AGE } from "@/lib/auth/session"
 import { recordAccessRequest } from "@/lib/access-requests"
+import { collectRequestMeta } from "@/lib/security/meta"
+import { isBlocked, isDynamicallyAuthorized, logSecurityEvent } from "@/lib/security/store"
 
 export const dynamic = "force-dynamic"
 
@@ -67,27 +69,55 @@ export async function GET(request: Request) {
     username: string
     global_name?: string
     avatar?: string | null
+    email?: string | null
   }
 
-  if (!isAuthorizedManager(user.id)) {
-    // Log the attempt as a pending access request and email the owner for approval.
-    await recordAccessRequest({
+  const displayName = user.global_name || user.username
+  const avatar = user.avatar
+    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+    : null
+  const meta = collectRequestMeta(request, "/manager")
+
+  // 1. Blocklist takes precedence over everything: deny, log, and never create a session.
+  if (await isBlocked(user.id)) {
+    await logSecurityEvent({
       discordId: user.id,
-      username: user.global_name || user.username,
-      avatar: user.avatar
-        ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
-        : null,
+      username: displayName,
+      reason: "blocked",
+      meta,
     })
+    return NextResponse.redirect(`${origin}/manager?error=blocked`)
+  }
+
+  // 2. Deny-by-default: authorized only if on the static list or dynamically approved.
+  const authorized = isAuthorizedManager(user.id) || (await isDynamicallyAuthorized(user.id))
+  if (!authorized) {
+    await logSecurityEvent({
+      discordId: user.id,
+      username: displayName,
+      reason: "unauthorized",
+      meta,
+    })
+    // Record a pending access request and email the owner with Approve / Reject links.
+    await recordAccessRequest(
+      {
+        discordId: user.id,
+        username: user.username,
+        displayName,
+        avatar,
+        email: user.email ?? null,
+        meta,
+      },
+      origin,
+    )
     return NextResponse.redirect(`${origin}/manager?error=unauthorized`)
   }
 
   const token = createSessionToken({
     discordId: user.id,
-    username: user.global_name || user.username,
+    username: displayName,
     role: managerRole(user.id),
-    avatar: user.avatar
-      ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
-      : null,
+    avatar,
   })
 
   const response = NextResponse.redirect(`${origin}/manager/dashboard`)
