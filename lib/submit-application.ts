@@ -111,7 +111,19 @@ export async function submitApplication(
   })
 
   if (!res.ok) {
-    const msg = await res.text().catch(() => '')
+    // Try to parse a JSON error body first, otherwise fall back to text.
+    let msg = ''
+    try {
+      const ct = res.headers.get('content-type') || ''
+      if (ct.includes('application/json')) {
+        const json = await res.json().catch(() => null)
+        if (json) msg = json.error || json.message || JSON.stringify(json)
+      } else {
+        msg = await res.text().catch(() => '')
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
     throw new Error(msg || 'Failed to save application.')
   }
 
